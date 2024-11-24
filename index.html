@@ -14,43 +14,44 @@
 
     // Invidiousからデータを取得する関数
     async function fetchAndPostInvidiousData() {
-        const input = document.getElementById('youtubeUrl').value;
-        const videoId = extractVideoId(input);
+    const input = document.getElementById('youtubeUrl').value;
+    const videoId = extractVideoId(input);
 
-        if (!videoId) {
-            document.getElementById('error').innerText = '無効なYouTubeのURLです。';
-            return;
-        }
-
-        const url = `https://thingproxy.freeboard.io/fetch/https://inv.nadeko.net/api/v1/videos/${videoId}`;
-
-        try {
-            // リクエスト送信中メッセージを表示
-            document.getElementById('result').innerText = 'URLを解析中…(1)';
-
-            // GETリクエストを送信
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`GETリクエストエラー: ${response.statusText}`);
-            }
-
-            // JSONを解析中メッセージを表示
-            document.getElementById('result').innerText = 'JSONを解析中…(3)';
-
-            const data = await response.json();
-            document.getElementById('result').innerText = JSON.stringify(data, null, 2);
-
-        } catch (error) {
-            // エラーメッセージを表示
-            document.getElementById('error').innerText = `エラーが発生しました: ${error.message}`;
-        }
+    if (!videoId) {
+        document.getElementById('error').innerText = '無効なYouTubeのURLです。';
+        return;
     }
+
+    const url = `https://thingproxy.freeboard.io/fetch/https://inv.nadeko.net/api/v1/videos/${videoId}`;
+
+    try {
+        // リクエスト送信中メッセージを表示
+        document.getElementById('result').innerText = 'URLを解析中…(1)';
+
+        // SafariのUser-Agentを設定
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`GETリクエストエラー: ${response.statusText}`);
+        }
+
+        // JSON解析中メッセージを表示
+        document.getElementById('result').innerText = 'JSONを解析中…(3)';
+
+        const data = await response.json();
+        document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+
+    } catch (error) {
+        // エラーメッセージを表示
+        document.getElementById('error').innerText = `エラーが発生しました: ${error.message}`;
+    }
+}
+
 </script>
