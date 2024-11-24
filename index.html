@@ -1,125 +1,56 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube URL to Invidious JSON with GET & POST</title>
-    <style>
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #555;
+<input type="text" id="youtubeUrl" placeholder="YouTubeのURLを入力">
+<button onclick="fetchAndPostInvidiousData()">送信</button>
+
+<div id="result"></div> <!-- レスポンスを表示するためのエリア -->
+<div id="error"></div>  <!-- エラーメッセージを表示するためのエリア -->
+
+<script>
+    // YouTubeのURLから動画IDを抽出する関数
+    function extractVideoId(url) {
+        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    }
+
+    // Invidiousからデータを取得する関数
+    async function fetchAndPostInvidiousData() {
+        const input = document.getElementById('youtubeUrl').value;
+        const videoId = extractVideoId(input);
+
+        if (!videoId) {
+            document.getElementById('error').innerText = '無効なYouTubeのURLです。';
+            return;
         }
-        #error {
-            color: red;
-        }
-        #result {
-            white-space: pre-wrap; /* JSONをきれいに表示するため */
-            background-color: #f0f0f0;
-            padding: 10px;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h1>YouTube URLをInvidious JSONに変換（GET & POST）</h1>
-    <input type="text" id="youtubeUrl" placeholder="YouTubeのURLを入力">
-    <button onclick="fetchAndPostInvidiousData()">送信</button>
-    
-    <div id="status"></div><br>
-    <div id="error"></div><br>
-    <div id="result"></div><br>
 
-    <script>
-        async function fetchAndPostInvidiousData() {
-            const youtubeUrl = document.getElementById('youtubeUrl').value;
-            const statusDiv = document.getElementById('status');
-            const errorDiv = document.getElementById('error');
-            const resultDiv = document.getElementById('result');
+        const url = `https://thingproxy.freeboard.io/fetch/https://inv.nadeko.net/api/v1/videos/${videoId}`;
 
-            // 状態とエラーの初期化
-            statusDiv.textContent = 'URLを解析中…(1)';
-            errorDiv.textContent = '';
-            resultDiv.textContent = '';
+        try {
+            // リクエスト送信中メッセージを表示
+            document.getElementById('result').innerText = 'URLを解析中…(1)';
 
-            // InvidiousのインスタンスURLを設定
-            const invidiousInstance = "https://thingproxy.freeboard.io/fetch/https://inv.nadeko.net"; // 使用するInvidiousのインスタンスURL
-            const apiUrlGet = `${invidiousInstance}/api/v1/videos/${encodeURIComponent(youtubeUrl)}`;
-            const apiUrlPost = `${invidiousInstance}/api/v1/videos/${encodeURIComponent(youtubeUrl)}`; // POSTのためのエンドポイント（仮定）
-
-            try {
-                // 1分（60秒）でタイムアウトする設定
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-                statusDiv.textContent = 'リクエスト送信中（GET）…(2)';
-
-                // GETリクエストを送信
-                const getRequest = fetch(apiUrlGet, {
-                    method: 'GET',
-                    signal: controller.signal
-                });
-
-                // POSTリクエストを同時に送信
-                statusDiv.textContent = 'リクエスト送信中（POST）…(2)';
-                const postRequest = fetch(apiUrlPost, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url: youtubeUrl }), // URLをPOSTで送信
-                    signal: controller.signal
-                });
-
-                // 両方のリクエストを同時に待機
-                const [getResponse, postResponse] = await Promise.allSettled([getRequest, postRequest]);
-
-                // タイムアウトのクリア
-                clearTimeout(timeoutId);
-
-                // GETリクエストの結果を確認
-                if (getResponse.status === 'fulfilled' && getResponse.value.ok) {
-                    statusDiv.textContent = 'GETリクエスト成功！JSONを解析中…(3)';
-                    const jsonData = await getResponse.value.json();
-                    resultDiv.textContent = JSON.stringify(jsonData, null, 2);
-                } else if (getResponse.status === 'rejected' || !getResponse.value.ok) {
-                    // GETリクエストが失敗した場合のエラーメッセージ
-                    const getErrorMessage = getResponse.reason ? getResponse.reason.message : `GETエラー: ${getResponse.value.status} (${getResponse.value.statusText})`;
-                    errorDiv.textContent = `GETリクエストエラー: ${getErrorMessage}`;
+            // GETリクエストを送信
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                // POSTリクエストの結果を確認
-                if (postResponse.status === 'fulfilled' && postResponse.value.ok) {
-                    statusDiv.textContent += ' POSTリクエスト成功！';
-                    const postJsonData = await postResponse.value.json();
-                    resultDiv.textContent += `\n\nPOSTリクエスト結果:\n${JSON.stringify(postJsonData, null, 2)}`;
-                } else if (postResponse.status === 'rejected' || !postResponse.value.ok) {
-                    // POSTリクエストが失敗した場合のエラーメッセージ
-                    const postErrorMessage = postResponse.reason ? postResponse.reason.message : `POSTエラー: ${postResponse.value.status} (${postResponse.value.statusText})`;
-                    errorDiv.textContent += ` POSTリクエストエラー: ${postErrorMessage}`;
-                }
-                
-                // 最終的な状態の表示
-                if (getResponse.status === 'fulfilled' && getResponse.value.ok && postResponse.status === 'fulfilled' && postResponse.value.ok) {
-                    statusDiv.textContent = 'GETとPOSTの両方が成功しました。';
-                } else if (getResponse.status === 'fulfilled' && getResponse.value.ok) {
-                    statusDiv.textContent = 'GETは成功しましたが、POSTでエラーが発生しました。';
-                } else if (postResponse.status === 'fulfilled' && postResponse.value.ok) {
-                    statusDiv.textContent = 'POSTは成功しましたが、GETでエラーが発生しました。';
-                } else {
-                    statusDiv.textContent = 'GETとPOSTの両方でエラーが発生しました。';
-                }
-
-            } catch (error) {
-                // タイムアウトやその他のエラーの処理
-                if (error.name === 'AbortError') {
-                    errorDiv.textContent = 'エラーが発生しました: リクエストがタイムアウトしました。';
-                } else {
-                    errorDiv.textContent = `エラーが発生しました: ${error.message}`;
-                }
-                statusDiv.textContent = 'エラーが発生しました。';
+            if (!response.ok) {
+                throw new Error(`GETリクエストエラー: ${response.statusText}`);
             }
+
+            // JSONを解析中メッセージを表示
+            document.getElementById('result').innerText = 'JSONを解析中…(3)';
+
+            const data = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+
+        } catch (error) {
+            // エラーメッセージを表示
+            document.getElementById('error').innerText = `エラーが発生しました: ${error.message}`;
         }
-    </script>
-</body>
-</html>
+    }
+</script>
