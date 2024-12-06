@@ -1,57 +1,39 @@
-<input type="text" id="youtubeUrl" placeholder="YouTubeのURLを入力">
-<button onclick="fetchAndPostInvidiousData()">送信</button>
-
-<div id="result"></div> <!-- レスポンスを表示するためのエリア -->
-<div id="error"></div>  <!-- エラーメッセージを表示するためのエリア -->
-
-<script>
-    // YouTubeのURLから動画IDを抽出する関数
-    function extractVideoId(url) {
-        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
-    }
-
-    // Invidiousからデータを取得する関数
-    async function fetchAndPostInvidiousData() {
-    const input = document.getElementById('youtubeUrl').value;
-    const videoId = extractVideoId(input);
-
-    if (!videoId) {
-        document.getElementById('error').innerText = '無効なYouTubeのURLです。';
-        return;
-    }
-
-    const url = `https://vercel-tau-lac-41.vercel.app/api?p=${videoId}`;
-
-    try {
-        // リクエスト送信中メッセージを表示
-        document.getElementById('result').innerText = 'URLを解析中…(1)';
-
-        // SafariのUser-Agentを設定
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動的リンク表示</title>
+</head>
+<body>
+    <h2>https://www.youtube.com/watch?v=：</h2>
+    <input type="text" id="userInput" placeholder="入力して送信">
+    <button onclick="fetchLink()">ダウンロードリンクを取得！ </button>
+    
+    <h3>返ってきたリンク：</h3>
+    <p id="result">${answer}</p>
+    
+    <script>
+        function fetchLink() {
+            const userInput = document.getElementById('userInput').value;
+            if (userInput === "") {
+                alert("テキストを入力してください。");
+                return;
             }
-        });
-
-        if (!response.ok) {
-            throw new Error(`GETリクエストエラー: ${response.statusText}`);
+            
+            const url = `https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${encodeURIComponent(userInput)}`;
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    // サーバーから返ってきたデータを動的に表示
+                    document.getElementById('result').innerText = data; // `${answer}`を実際のリンクに置き換え
+                })
+                .catch(error => {
+                    console.error('エラー:', error);
+                    document.getElementById('result').innerText = 'エラーが発生しました。';
+                });
         }
-
-        // JSON解析中メッセージを表示
-        document.getElementById('result').innerText = 'JSONを解析中…(3)';
-
-        const data = await response.json();
-        document.getElementById('result').innerText = JSON.stringify(data, null, 2);
-
-    } catch (error) {
-        // エラーメッセージを表示
-        document.getElementById('error').innerText = `エラーが発生しました: ${error.message}`;
-    }
-}
-
-</script>
+    </script>
+</body>
+</html>
