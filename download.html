@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Downloader</title>
     <style>
+.button01 {
+  background-color: #2f4f4f;
+  color: #fff;
+  padding: 10px 30px;
+  text-decoration: none;
+  font-size: 1em;
+}
+.button01:hover {
+  color: #fff;
+  opacity: 0.8;
+}
         .button-group { margin-top: 20px; }
         .button-group button { margin: 5px; padding: 10px; cursor: pointer; }
     </style>
@@ -15,7 +26,7 @@
 
 <!-- テキストボックス -->
 <label for="videoid">httpa://www.youtube.com/watch?v=</label>
-<input type="text" id="videoid" name="videoid" placeholder="Enter Video ID">
+<input type="text" class="button01" id="videoid" name="videoid" placeholder="Enter Video ID">
 <button id="fetchButton">ダウンロードリンクを取得</button>
 
 <!-- 結果表示エリア -->
