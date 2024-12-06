@@ -3,37 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>動的リンク表示</title>
+    <title>YouTube Video Downloader</title>
+    <style>
+        .button-group { margin-top: 20px; }
+        .button-group button { margin: 5px; padding: 10px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <h2>https://www.youtube.com/watch?v=：</h2>
-    <input type="text" id="userInput" placeholder="入力して送信">
-    <button onclick="fetchLink()">ダウンロードリンクを取得！ </button>
-    
-    <h3>返ってきたリンク：</h3>
-    <p id="result">${answer}</p>
-    
-    <script>
-        function fetchLink() {
-            const userInput = document.getElementById('userInput').value;
-            if (userInput === "") {
-                alert("テキストを入力してください。");
-                return;
-            }
-            
-            const url = `https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${encodeURIComponent(userInput)}`;
-            
-            fetch(url)
-                .then(response => response.text())
-                .then(data => {
-                    // サーバーから返ってきたデータを動的に表示
-                    document.getElementById('result').innerText = data; // `${answer}`を実際のリンクに置き換え
-                })
-                .catch(error => {
-                    console.error('エラー:', error);
-                    document.getElementById('result').innerText = 'エラーが発生しました。';
-                });
+
+<h1>YouTube Video Downloader</h1>
+
+<!-- テキストボックス -->
+<label for="videoid">動画IDを入力:</label>
+<input type="text" id="videoid" name="videoid" placeholder="Enter Video ID">
+<button id="fetchButton">ダウンロードリンクを取得</button>
+
+<!-- 結果表示エリア -->
+<div id="result" class="button-group"></div>
+
+<script>
+    document.getElementById("fetchButton").addEventListener("click", function() {
+        var videoid = document.getElementById("videoid").value;
+        if (!videoid) {
+            alert("動画IDを入力してください！");
+            return;
         }
-    </script>
+
+        // APIリクエスト
+        fetch(`https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`)
+            .then(response => response.json())
+            .then(data => {
+                // 結果のボタンを生成
+                var resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = ""; // 前回の結果をクリア
+
+                // 音声と画質ごとにボタンを作成
+                data.adaptiveFormats.forEach(format => {
+                    var button = document.createElement("button");
+                    if (format.type.includes("audio")) {
+                        button.innerText = `音声: ${format.audioQuality || "不明"} (${format.bitrate / 1000} kbps)`;
+                        button.onclick = () => window.open(format.url, "_blank");
+                    } else if (format.type.includes("video")) {
+                        button.innerText = `画質: ${format.qualityLabel || "不明"} (${format.resolution})`;
+                        button.onclick = () => window.open(format.url, "_blank");
+                    }
+                    resultDiv.appendChild(button);
+                });
+            })
+            .catch(error => {
+                console.error("エラーが発生しました:", error);
+                alert("エラーが発生しました。再度お試しください。");
+            });
+    });
+</script>
+
 </body>
 </html>
+
