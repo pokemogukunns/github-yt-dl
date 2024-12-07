@@ -5,19 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Downloader</title>
     <style>
-.button01 {
-  background-color: #2f4f4f;
-  color: #fff;
-  padding: 10px 30px;
-  text-decoration: none;
-  font-size: 1em;
-}
-.button01:hover {
-  color: #fff;
-  opacity: 0.8;
-}
-        .button-group { margin-top: 20px; }
-        .button-group button { margin: 5px; padding: 10px; cursor: pointer; }
+      .button01 {
+        background-color: #2f4f4f;
+        color: #fff;
+        padding: 10px 30px;
+        text-decoration: none;
+        font-size: 1em;
+        border-radius: 5px;
+        display: inline-block;
+      }
+      .button01:hover {
+        color: #fff;
+        opacity: 0.8;
+      }
+      .button-group { margin-top: 20px; }
+      .button-group button { margin: 5px; padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -25,56 +27,57 @@
 <h1>YouTube Video Downloader</h1>
 
 <!-- テキストボックス -->
-<label for="videoid">httpa://www.youtube.com/watch?v=</label>
+<label for="videoid">http://www.youtube.com/watch?v=</label>
 <input type="text" class="button01" id="videoid" name="videoid" placeholder="Enter Video ID">
-<button id="fetchButton">ダウンロードリンクを取得</button>
+<button id="fetchButton" class="button01">ダウンロードリンクを取得</button>
 
 <!-- 結果表示エリア -->
 <div id="result" class="button-group"></div>
 
-  <!-- 動的に追加されるvideoタグの表示場所 -->
-  <div id="videoContainer" class="video-container"></div>
+<!-- 動的に追加されるvideoタグの表示場所 -->
+<div id="videoContainer" class="video-container"></div>
 
-  <script>
-    document.getElementById("dynamicButton").addEventListener("click", function(event) {
-      event.preventDefault();  // ボタンのデフォルト動作（リンク遷移）を無効化
+<script>
+  document.getElementById("fetchButton").addEventListener("click", function(event) {
+    event.preventDefault();  // ボタンのデフォルト動作（リンク遷移）を無効化
 
-      const videoid = document.getElementById("videoid").value;  // 入力されたvideoidを取得
-      const apiUrl = `https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`;
+    const videoid = document.getElementById("videoid").value;  // 入力されたvideoidを取得
+    const apiUrl = `https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`;
 
-      fetch(apiUrl)  // APIリクエスト
-        .then(response => response.json())  // JSONとしてレスポンスを処理
-        .then(data => {
-          // dataから最高画質を選択（画質の最高値を持つオブジェクトを選ぶ）
-          const highestQuality = data.data.streams.reduce((max, stream) => {
-            return stream.height > max.height ? stream : max;  // 高さが最も高いものを選ぶ
-          }, data.data.streams[0]);
+    fetch(apiUrl)  // APIリクエスト
+      .then(response => response.json())  // JSONとしてレスポンスを処理
+      .then(data => {
+        // dataから最高画質を選択（画質の最高値を持つオブジェクトを選ぶ）
+        const highestQuality = data.data.streams.reduce((max, stream) => {
+          return stream.height > max.height ? stream : max;  // 高さが最も高いものを選ぶ
+        }, data.data.streams[0]);
 
-          // 最高画質のリンクを取得
-          const videoUrl = highestQuality.url;
+        // 最高画質のリンクを取得
+        const videoUrl = highestQuality.url;
 
-          // 動的にvideoタグを作成
-          const videoElement = document.createElement('video');
-          videoElement.controls = true;  // コントロールを有効にする
-          const sourceElement = document.createElement('source');
-          sourceElement.src = videoUrl;
-          sourceElement.type = "video/mp4";
+        // 動的にvideoタグを作成
+        const videoElement = document.createElement('video');
+        videoElement.controls = true;  // コントロールを有効にする
+        const sourceElement = document.createElement('source');
+        sourceElement.src = videoUrl;
+        sourceElement.type = "video/mp4";
 
-          // videoタグにsourceを追加
-          videoElement.appendChild(sourceElement);
+        // videoタグにsourceを追加
+        videoElement.appendChild(sourceElement);
 
-          // 既存のvideoタグがあれば削除
-          const videoContainer = document.getElementById('videoContainer');
-          videoContainer.innerHTML = '';  // 一度クリア
+        // 既存のvideoタグがあれば削除
+        const videoContainer = document.getElementById('videoContainer');
+        videoContainer.innerHTML = '';  // 一度クリア
 
-          // 動的に作成したvideoタグをコンテナに追加
-          videoContainer.appendChild(videoElement);
-        })
-        .catch(error => {
-          console.error('APIリクエストエラー:', error);
-          alert('エラーが発生しました。再試行してください。');
-        });
-    });
-  </script>
+        // 動的に作成したvideoタグをコンテナに追加
+        videoContainer.appendChild(videoElement);
+      })
+      .catch(error => {
+        console.error('APIリクエストエラー:', error);
+        alert('エラーが発生しました。再試行してください。');
+      });
+  });
+</script>
+
 </body>
 </html>
