@@ -5,6 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Downloader</title>
     <style>
+        .button-group { margin-top: 20px; }
+        .button-group button { margin: 5px; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h1>YouTube Video Downloader</h1>
+
+<!-- テキストボックス -->
+<label for="videoid">動画IDを入力:</label>
+<input type="text" id="videoid" name="videoid" placeholder="Enter Video ID">
+<button id="fetchButton">ダウンロードリンクを取得</button>
+
+<!-- 結果表示エリア -->
+<div id="result" class="button-group"></div>
+
+<script>
+// デコード関数
+function decodeHtml(encodedString) {
+    var doc = new DOMParser().parseFromString(encodedString, 'text/html');
+    return doc.documentElement.textContent || doc.documentElement.innerText;
+}
+
+document.getElementById("fetchButton").addEventListener("click", function() {
+    var videoid = document.getElementById("videoid").value;
+    if (!videoid) {
+        alert("動画IDを入力してください！");
+        return;
+    }
+
+    // APIリクエスト
+    fetch(`https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`)
+        .then(response => response.json())
+        .then(data => {
+            // 結果のボタンを生成
+            var resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; // 前回の結果をクリア
+
+            // descriptionHtmlをデコードして表示
+            var decodedDescription = decodeHtml(data.descriptionHtml);
+            var descriptionDiv = document.createElement("div");
+            descriptionDiv.innerHTML = decodedDescription;
+            resultDiv.appendChild(descriptionDiv);
+
+            // 音声と画質ごとにボタンを作成
+            data.adaptiveFormats.forEach(format => {
+                var button = document.createElement("button");
+                if (format.type.includes("audio")) {
+                    button.innerText = `音声: ${format.audioQuality || "不明"} (${format.bitrate / 1000} kbps)`;
+                    button.onclick = () => window.open(format.url, "_blank");
+                } else if (format.type.includes("video")) {
+                    button.innerText = `画質: ${format.qualityLabel || "不明"} (${format.resolution})`;
+                    button.onclick = () => window.open(format.url, "_blank");
+                }
+                resultDiv.appendChild(button);
+            });
+        })
+        .catch(error => {
+            console.error("エラーが発生しました:", error);
+            alert("エラーが発生しました。再度お試しください。");
+        });
+});
+</script>
+
+</body>
+</html>
+
+<!--<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
       .button01 {
         background-color: #2f4f4f;
         color: #fff;
@@ -26,15 +100,15 @@
 
 <h1>YouTube Video Downloader</h1>
 
-<!-- テキストボックス -->
-<label for="videoid">http://www.youtube.com/watch?v=</label>
+テキストボックス -->
+<!--<label for="videoid">http://www.youtube.com/watch?v=</label>
 <input type="text" class="button01" id="videoid" name="videoid" placeholder="Enter Video ID">
 <button id="fetchButton" class="button01">ダウンロードリンクを取得</button>
 
-<!-- 結果表示エリア -->
+<!-- 結果表示エリア 
 <div id="result" class="button-group"></div>
 
-<!-- 動的に追加されるvideoタグの表示場所 -->
+<!-- 動的に追加されるvideoタグの表示場所 -
 <div id="videoContainer" class="video-container"></div>
 
 <script>
@@ -80,4 +154,4 @@
 </script>
 
 </body>
-</html>
+</html>-->
