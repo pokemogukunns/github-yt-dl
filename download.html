@@ -32,42 +32,40 @@
 <!-- 結果表示エリア -->
 <div id="result" class="button-group"></div>
 
-<script>
-    document.getElementById("fetchButton").addEventListener("click", function() {
-        var videoid = document.getElementById("videoid").value;
-        if (!videoid) {
-            alert("動画IDを入力してください！");
-            return;
-        }
+  <!-- 動画表示 -->
+  <video id="videoPlayer" controls>
+    <source id="videoSource" src="" type="video/mp4">
+    お使いのブラウザは動画タグをサポートしていません。
+  </video>
 
-        // APIリクエスト
-        fetch(`https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`)
-            .then(response => response.json())
-            .then(data => {
-                // 結果のボタンを生成
-                var resultDiv = document.getElementById("result");
-                resultDiv.innerHTML = ""; // 前回の結果をクリア
+  <script>
+    document.getElementById("dynamicButton").addEventListener("click", function(event) {
+      event.preventDefault();  // ボタンのデフォルト動作（リンク遷移）を無効化
 
-                // 音声と画質ごとにボタンを作成
-                data.adaptiveFormats.forEach(format => {
-                    var button = document.createElement("button");
-                    if (format.type.includes("audio")) {
-                        button.innerText = `音声: ${format.audioQuality || "不明"} (${format.bitrate / 1000} kbps)`;
-                        button.onclick = () => window.open(format.url, "_blank");
-                    } else if (format.type.includes("video")) {
-                        button.innerText = `画質: ${format.qualityLabel || "不明"} (${format.resolution})`;
-                        button.onclick = () => window.open(format.url, "_blank");
-                    }
-                    resultDiv.appendChild(button);
-                });
-            })
-            .catch(error => {
-                console.error("エラーが発生しました:", error);
-                alert("エラーが発生しました。再度お試しください。");
-            });
+      const videoid = document.getElementById("videoid").value;  // 入力されたvideoidを取得
+      const apiUrl = `https://xn--hg8hdeeddoy8p62bka6jw5blcz66buxdra.easterndns.com/api?v=${videoid}`;
+
+      fetch(apiUrl)  // APIリクエスト
+        .then(response => response.json())  // JSONとしてレスポンスを処理
+        .then(data => {
+          // dataから最高画質を選択（画質の最高値を持つオブジェクトを選ぶ）
+          const highestQuality = data.data.streams.reduce((max, stream) => {
+            return stream.height > max.height ? stream : max;  // 高さが最も高いものを選ぶ
+          }, data.data.streams[0]);
+
+          // 最高画質のリンクをvideoタグに設定
+          const videoUrl = highestQuality.url;
+          document.getElementById("videoSource").src = videoUrl;
+
+          // videoタグを更新して再読み込み
+          const videoElement = document.getElementById("videoPlayer");
+          videoElement.load();  // 新しいソースURLを反映
+        })
+        .catch(error => {
+          console.error('APIリクエストエラー:', error);
+          alert('エラーが発生しました。再試行してください。');
+        });
     });
-</script>
-
+  </script>
 </body>
 </html>
-
